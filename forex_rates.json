@@ -1,0 +1,82 @@
+{
+  "EUR/USD": {
+    "symbol": "EUR/USD",
+    "bid": 1.1078,
+    "ask": 1.1082,
+    "timestamp": 1752066720005,
+    "change": 0.00048,
+    "changePercentage": 0.043
+  },
+  "USD/JPY": {
+    "symbol": "USD/JPY",
+    "bid": 148.05339,
+    "ask": 148.05379,
+    "timestamp": 1752066720005,
+    "change": -0.00241,
+    "changePercentage": -0.002
+  },
+  "GBP/USD": {
+    "symbol": "GBP/USD",
+    "bid": 1.28224,
+    "ask": 1.28264,
+    "timestamp": 1752066720005,
+    "change": 0.00403,
+    "changePercentage": 0.315
+  },
+  "USD/CHF": {
+    "symbol": "USD/CHF",
+    "bid": 0.90042,
+    "ask": 0.90082,
+    "timestamp": 1752066720005,
+    "change": 0.00417,
+    "changePercentage": 0.465
+  },
+  "AUD/USD": {
+    "symbol": "AUD/USD",
+    "bid": 0.65697,
+    "ask": 0.65737,
+    "timestamp": 1752066720005,
+    "change": -0.0013,
+    "changePercentage": -0.197
+  },
+  "USD/CAD": {
+    "symbol": "USD/CAD",
+    "bid": 1.36233,
+    "ask": 1.36273,
+    "timestamp": 1752066720005,
+    "change": -0.00271,
+    "changePercentage": -0.198
+  },
+  "NZD/USD": {
+    "symbol": "NZD/USD",
+    "bid": 0.6182,
+    "ask": 0.6186,
+    "timestamp": 1752066720005,
+    "change": 0.00554,
+    "changePercentage": 0.905
+  },
+  "EUR/GBP": {
+    "symbol": "EUR/GBP",
+    "bid": 0.86502,
+    "ask": 0.86542,
+    "timestamp": 1752066720005,
+    "change": -0.00113,
+    "changePercentage": -0.13
+  },
+  "EUR/JPY": {
+    "symbol": "EUR/JPY",
+    "bid": 164.07691,
+    "ask": 164.07731,
+    "timestamp": 1752066720005,
+    "change": 0.00411,
+    "changePercentage": 0.003
+  },
+  "GBP/JPY": {
+    "symbol": "GBP/JPY",
+    "bid": 189.37356,
+    "ask": 189.37396,
+    "timestamp": 1752066720005,
+    "change": -0.00124,
+    "changePercentage": -0.001
+  }
+}
