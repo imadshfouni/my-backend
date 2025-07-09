@@ -1,0 +1,471 @@
+{
+  "EUR/USD": {
+    "MA_20": {
+      "symbol": "EUR/USD",
+      "indicator": "MA_20",
+      "value": 1.1065831492211857,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "EUR/USD",
+      "indicator": "MA_50",
+      "value": 1.1110543894978298,
+      "signal": "sell",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "EUR/USD",
+      "indicator": "MA_200",
+      "value": 1.0958097196369017,
+      "signal": "buy",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "EUR/USD",
+      "indicator": "RSI_14",
+      "value": 36,
+      "signal": "neutral",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "EUR/USD",
+      "indicator": "MACD",
+      "value": "MACD: -0.00076, Signal: -0.00028, Hist: -0.00049",
+      "signal": "sell",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "EUR/USD",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 1.10752, Upper: 1.10929, Lower: 1.10575",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  },
+  "USD/JPY": {
+    "MA_20": {
+      "symbol": "USD/JPY",
+      "indicator": "MA_20",
+      "value": 147.8766191381749,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "USD/JPY",
+      "indicator": "MA_50",
+      "value": 146.83117550388727,
+      "signal": "buy",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "USD/JPY",
+      "indicator": "MA_200",
+      "value": 149.875101275346,
+      "signal": "sell",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "USD/JPY",
+      "indicator": "RSI_14",
+      "value": 28,
+      "signal": "buy",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "USD/JPY",
+      "indicator": "MACD",
+      "value": "MACD: -0.08537, Signal: -0.14048, Hist: 0.05510",
+      "signal": "buy",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "USD/JPY",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 148.05600, Upper: 148.35211, Lower: 147.75989",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  },
+  "GBP/USD": {
+    "MA_20": {
+      "symbol": "GBP/USD",
+      "indicator": "MA_20",
+      "value": 1.275237620121234,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "GBP/USD",
+      "indicator": "MA_50",
+      "value": 1.2891596020034157,
+      "signal": "sell",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "GBP/USD",
+      "indicator": "MA_200",
+      "value": 1.286629448439512,
+      "signal": "sell",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "GBP/USD",
+      "indicator": "RSI_14",
+      "value": 52,
+      "signal": "neutral",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "GBP/USD",
+      "indicator": "MACD",
+      "value": "MACD: 0.00067, Signal: 0.00123, Hist: -0.00055",
+      "signal": "sell",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "GBP/USD",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 1.27841, Upper: 1.28148, Lower: 1.27534",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  },
+  "USD/CHF": {
+    "MA_20": {
+      "symbol": "USD/CHF",
+      "indicator": "MA_20",
+      "value": 0.8920627298204836,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "USD/CHF",
+      "indicator": "MA_50",
+      "value": 0.9034790607418768,
+      "signal": "sell",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "USD/CHF",
+      "indicator": "MA_200",
+      "value": 0.90443770802165,
+      "signal": "sell",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "USD/CHF",
+      "indicator": "RSI_14",
+      "value": 69,
+      "signal": "neutral",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "USD/CHF",
+      "indicator": "MACD",
+      "value": "MACD: -0.00001, Signal: 0.00031, Hist: -0.00032",
+      "signal": "sell",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "USD/CHF",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 0.89645, Upper: 0.89806, Lower: 0.89484",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  },
+  "AUD/USD": {
+    "MA_20": {
+      "symbol": "AUD/USD",
+      "indicator": "MA_20",
+      "value": 0.6570714876390542,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "AUD/USD",
+      "indicator": "MA_50",
+      "value": 0.6621792571408842,
+      "signal": "sell",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "AUD/USD",
+      "indicator": "MA_200",
+      "value": 0.6658287528686143,
+      "signal": "sell",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "AUD/USD",
+      "indicator": "RSI_14",
+      "value": 59,
+      "signal": "neutral",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "AUD/USD",
+      "indicator": "MACD",
+      "value": "MACD: -0.00048, Signal: -0.00059, Hist: 0.00011",
+      "signal": "buy",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "AUD/USD",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 0.65847, Upper: 0.65992, Lower: 0.65702",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  },
+  "USD/CAD": {
+    "MA_20": {
+      "symbol": "USD/CAD",
+      "indicator": "MA_20",
+      "value": 1.3601767041196693,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "USD/CAD",
+      "indicator": "MA_50",
+      "value": 1.3576833300876574,
+      "signal": "buy",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "USD/CAD",
+      "indicator": "MA_200",
+      "value": 1.3580191815975584,
+      "signal": "buy",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "USD/CAD",
+      "indicator": "RSI_14",
+      "value": 61,
+      "signal": "neutral",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "USD/CAD",
+      "indicator": "MACD",
+      "value": "MACD: 0.00004, Signal: -0.00004, Hist: 0.00008",
+      "signal": "buy",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "USD/CAD",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 1.36524, Upper: 1.36770, Lower: 1.36278",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  },
+  "NZD/USD": {
+    "MA_20": {
+      "symbol": "NZD/USD",
+      "indicator": "MA_20",
+      "value": 0.6111729414940275,
+      "signal": "buy",
+      "parameters": {
+        "period": 20
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_50": {
+      "symbol": "NZD/USD",
+      "indicator": "MA_50",
+      "value": 0.6170284984346445,
+      "signal": "sell",
+      "parameters": {
+        "period": 50
+      },
+      "timestamp": 1752059235144
+    },
+    "MA_200": {
+      "symbol": "NZD/USD",
+      "indicator": "MA_200",
+      "value": 0.6193940479455828,
+      "signal": "sell",
+      "parameters": {
+        "period": 200
+      },
+      "timestamp": 1752059235144
+    },
+    "RSI_14": {
+      "symbol": "NZD/USD",
+      "indicator": "RSI_14",
+      "value": 55,
+      "signal": "neutral",
+      "parameters": {
+        "period": 14,
+        "overbought": 70,
+        "oversold": 30
+      },
+      "timestamp": 1752059235144
+    },
+    "MACD": {
+      "symbol": "NZD/USD",
+      "indicator": "MACD",
+      "value": "MACD: -0.00030, Signal: -0.00024, Hist: -0.00007",
+      "signal": "sell",
+      "parameters": {
+        "fastPeriod": 12,
+        "slowPeriod": 26,
+        "signalPeriod": 9
+      },
+      "timestamp": 1752059235144
+    },
+    "Bollinger_20_2": {
+      "symbol": "NZD/USD",
+      "indicator": "Bollinger_20_2",
+      "value": "Middle: 0.61286, Upper: 0.61433, Lower: 0.61139",
+      "signal": "neutral",
+      "parameters": {
+        "period": 20,
+        "deviations": 2
+      },
+      "timestamp": 1752059235144
+    }
+  }
+}

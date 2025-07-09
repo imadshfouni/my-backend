@@ -1,0 +1,191 @@
+{
+  "EUR/USD_USD/JPY": {
+    "symbolPair": [
+      "EUR/USD",
+      "USD/JPY"
+    ],
+    "correlation": -0.54,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "EUR/USD_GBP/USD": {
+    "symbolPair": [
+      "EUR/USD",
+      "GBP/USD"
+    ],
+    "correlation": 0.78,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "EUR/USD_USD/CHF": {
+    "symbolPair": [
+      "EUR/USD",
+      "USD/CHF"
+    ],
+    "correlation": -0.77,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "EUR/USD_AUD/USD": {
+    "symbolPair": [
+      "EUR/USD",
+      "AUD/USD"
+    ],
+    "correlation": -0.82,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "EUR/USD_USD/CAD": {
+    "symbolPair": [
+      "EUR/USD",
+      "USD/CAD"
+    ],
+    "correlation": 0.94,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "EUR/USD_NZD/USD": {
+    "symbolPair": [
+      "EUR/USD",
+      "NZD/USD"
+    ],
+    "correlation": -0.64,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/JPY_GBP/USD": {
+    "symbolPair": [
+      "USD/JPY",
+      "GBP/USD"
+    ],
+    "correlation": -0.7,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/JPY_USD/CHF": {
+    "symbolPair": [
+      "USD/JPY",
+      "USD/CHF"
+    ],
+    "correlation": 0.26,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/JPY_AUD/USD": {
+    "symbolPair": [
+      "USD/JPY",
+      "AUD/USD"
+    ],
+    "correlation": -0.21,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/JPY_USD/CAD": {
+    "symbolPair": [
+      "USD/JPY",
+      "USD/CAD"
+    ],
+    "correlation": -0.1,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/JPY_NZD/USD": {
+    "symbolPair": [
+      "USD/JPY",
+      "NZD/USD"
+    ],
+    "correlation": 0.1,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "GBP/USD_USD/CHF": {
+    "symbolPair": [
+      "GBP/USD",
+      "USD/CHF"
+    ],
+    "correlation": -0.43,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "GBP/USD_AUD/USD": {
+    "symbolPair": [
+      "GBP/USD",
+      "AUD/USD"
+    ],
+    "correlation": -0.57,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "GBP/USD_USD/CAD": {
+    "symbolPair": [
+      "GBP/USD",
+      "USD/CAD"
+    ],
+    "correlation": 0.76,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "GBP/USD_NZD/USD": {
+    "symbolPair": [
+      "GBP/USD",
+      "NZD/USD"
+    ],
+    "correlation": -0.37,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/CHF_AUD/USD": {
+    "symbolPair": [
+      "USD/CHF",
+      "AUD/USD"
+    ],
+    "correlation": 0.45,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/CHF_USD/CAD": {
+    "symbolPair": [
+      "USD/CHF",
+      "USD/CAD"
+    ],
+    "correlation": 0.21,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/CHF_NZD/USD": {
+    "symbolPair": [
+      "USD/CHF",
+      "NZD/USD"
+    ],
+    "correlation": 0.72,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "AUD/USD_USD/CAD": {
+    "symbolPair": [
+      "AUD/USD",
+      "USD/CAD"
+    ],
+    "correlation": 0.23,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "AUD/USD_NZD/USD": {
+    "symbolPair": [
+      "AUD/USD",
+      "NZD/USD"
+    ],
+    "correlation": 0.9,
+    "period": "30D",
+    "timestamp": 1752059235145
+  },
+  "USD/CAD_NZD/USD": {
+    "symbolPair": [
+      "USD/CAD",
+      "NZD/USD"
+    ],
+    "correlation": -0.8,
+    "period": "30D",
+    "timestamp": 1752059235145
+  }
+}
