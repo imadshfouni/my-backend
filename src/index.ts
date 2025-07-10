@@ -7,7 +7,7 @@ import apiRoutes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { ConfigManager } from './utils/config';
 import { ForexDataService } from './services/ForexDataService';
-import { sessionManager } from './middlewares/sessionManager'; // ✅ use your session manager
+import { sessionManager } from './middlewares/sessionManager';
 
 // Initialize services
 const forexService = ForexDataService.getInstance();
@@ -35,8 +35,12 @@ const storage = multer.diskStorage({
   }
 });
 
-// Middleware
-app.use(cors({ origin: true, credentials: true }));
+// ✅ Use CORS with your real frontend domain
+app.use(cors({
+  origin: 'https://ai.finverseinvest.io', // replace with your frontend URL
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -62,7 +66,6 @@ process.on('uncaughtException', (error: Error) => {
   process.exit(1);
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
