@@ -20,6 +20,9 @@ const UPLOAD_DIR = ConfigManager.get('UPLOAD_DIR', 'uploads');
 // Create Express app
 const app = express();
 
+// ✅ Tell Express to trust the first proxy (Render/Vercel/Heroku etc.)
+app.set('trust proxy', 1);
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
