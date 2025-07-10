@@ -1,11 +1,17 @@
 import { Router } from 'express';
 import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// 📝 Load the system prompt at startup
+const systemPromptPath = path.join(process.cwd(), 'data', 'system_prompt.txt');
+const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 
 router.post('/', async (req, res) => {
   const { input } = req.body;
@@ -16,8 +22,11 @@ router.post('/', async (req, res) => {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',  // ✅ FIXED HERE
-      messages: [{ role: 'user', content: input }],
+      model: 'gpt-3.5-turbo',  // ✅ keep or upgrade to gpt-4 if available
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: input }
+      ],
     });
 
     const result = completion.choices[0]?.message?.content || '';
