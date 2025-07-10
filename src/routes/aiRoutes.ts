@@ -78,6 +78,55 @@ function computeEMACross(candles) {
   return { name: 'EMA 20/50 Cross', value: 'Neutral' };
 }
 
+function computeRSI(candles, period = 14) {
+  const closes = candles.map(c => c.close);
+  const deltas = [];
+
+  for (let i = 1; i < closes.length; i++) {
+    deltas.push(closes[i] - closes[i - 1]);
+  }
+
+  let gains = 0, losses = 0;
+  for (let i = deltas.length - period; i < deltas.length; i++) {
+    if (deltas[i] > 0) gains += deltas[i];
+    else losses -= deltas[i];
+  }
+
+  const avgGain = gains / period;
+  const avgLoss = losses / period || 1;
+  const rs = avgGain / avgLoss;
+  const rsi = 100 - (100 / (1 + rs));
+
+  if (rsi > 70) return { name: 'RSI', value: 'Overbought' };
+  if (rsi < 30) return { name: 'RSI', value: 'Oversold' };
+  return { name: 'RSI', value: 'Neutral' };
+}
+
+function computeMACD(candles) {
+  const closes = candles.map(c => c.close);
+
+  const ema = (arr, length) => {
+    const k = 2 / (length + 1);
+    let emaArr = [arr[0]];
+    for (let i = 1; i < arr.length; i++) {
+      emaArr.push(arr[i] * k + emaArr[i - 1] * (1 - k));
+    }
+    return emaArr;
+  };
+
+  const ema12 = ema(closes, 12);
+  const ema26 = ema(closes, 26);
+  const macdLine = ema12.map((v, i) => v - ema26[i]);
+  const signalLine = ema(macdLine, 9);
+
+  const latestMacd = macdLine[macdLine.length - 1];
+  const latestSignal = signalLine[signalLine.length - 1];
+
+  if (latestMacd > latestSignal) return { name: 'MACD', value: 'Bullish' };
+  if (latestMacd < latestSignal) return { name: 'MACD', value: 'Bearish' };
+  return { name: 'MACD', value: 'Neutral' };
+}
+
 router.post('/', async (req, res) => {
   const { input } = req.body;
 
@@ -96,11 +145,13 @@ router.post('/', async (req, res) => {
 
     const indicators = [
       computeTrendStructure(candles),
-      computeEMACross(candles)
+      computeEMACross(candles),
+      computeRSI(candles),
+      computeMACD(candles)
     ];
 
-    const bullishCount = indicators.filter(i => i.value === 'Bullish').length;
-    const bearishCount = indicators.filter(i => i.value === 'Bearish').length;
+    const bullishCount = indicators.filter(i => i.value === 'Bullish' || i.value === 'Oversold').length;
+    const bearishCount = indicators.filter(i => i.value === 'Bearish' || i.value === 'Overbought').length;
 
     const confluence = bullishCount > bearishCount ? 'Bullish' : 'Bearish';
 
