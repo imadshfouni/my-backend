@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+import { getOrCreateSession } from '../middlewares/sessionManager';
 
 const router = Router();
 
@@ -198,9 +199,21 @@ function detectLiquidityGrab(candles) {
 
 // POST
 router.post('/', async (req, res) => {
+  getOrCreateSession(req);
+
   const { input } = req.body;
   if (!input) return res.status(400).json({ message: 'Missing input' });
+
   try {
+    if (!req.session.systemChoice) {
+      if (['1', '2', '3'].includes(input.trim())) {
+        req.session.systemChoice = input.trim();
+        return res.json({ result: `✅ System choice saved: ${input}. Now tell me what to analyze.` });
+      } else {
+        return res.json({ result: `Which system would you like me to use? Please reply with a number: 1️⃣ SMC, 2️⃣ 10-Indicator Confluence, 3️⃣ Both combined (recommended).` });
+      }
+    }
+
     const prices = await getLivePricesTwelveData();
     const candles = await fetchCandles();
 
@@ -222,6 +235,8 @@ router.post('/', async (req, res) => {
     ];
 
     const marketContext = `
+User system choice: ${req.session.systemChoice}
+
 Current Market Prices:
 Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
