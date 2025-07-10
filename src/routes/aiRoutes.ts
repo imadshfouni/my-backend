@@ -17,9 +17,7 @@ const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
 async function getLivePricesFinnhub() {
   const symbols = {
-    'XAU/USD': 'OANDA:XAU_USD',
-    'EUR/USD': 'OANDA:EUR_USD',
-    'US30': 'OANDA:US30_USD'
+    'EUR/USD': 'OANDA:EUR_USD'
   };
 
   const prices = {};
@@ -47,16 +45,14 @@ router.post('/', async (req, res) => {
   try {
     const prices = await getLivePricesFinnhub();
 
-    if (!prices['XAU/USD'] || !prices['EUR/USD'] || !prices['US30']) {
-      console.error('Error: Missing live price(s):', prices);
-      return res.status(500).json({ message: 'Failed to fetch live market prices. Please try again later.' });
+    if (!prices['EUR/USD']) {
+      console.error('Error: Missing live price for EUR/USD:', prices);
+      return res.status(500).json({ message: 'Failed to fetch EUR/USD live market price. Please try again later.' });
     }
 
     const marketContext = `
 Current Market Prices:
-Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
-US30 (Dow Jones): ${prices['US30']}
 `;
 
     console.log('Market Context:', marketContext);
