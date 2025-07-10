@@ -13,24 +13,23 @@ const openai = new OpenAI({
 const systemPromptPath = path.join(process.cwd(), 'data', 'system_prompt.txt');
 const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 
-const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
+const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
+const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-async function getLivePricesFinnhub() {
-  const symbols = {
-    'EUR/USD': 'OANDA:EUR_USD'
-  };
+async function getLivePricesTwelveData() {
+  const symbols = ['XAU/USD', 'EUR/USD', 'US30'];
+  const promises = symbols.map(symbol =>
+    axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
+      params: { symbol, apikey: TWELVE_DATA_API_KEY },
+    })
+  );
+
+  const results = await Promise.all(promises);
 
   const prices = {};
-
-  for (const [key, finnhubSymbol] of Object.entries(symbols)) {
-    const response = await axios.get(`https://finnhub.io/api/v1/quote`, {
-      params: {
-        symbol: finnhubSymbol,
-        token: FINNHUB_API_KEY
-      }
-    });
-    prices[key] = response.data.c; // c = current price
-  }
+  symbols.forEach((symbol, i) => {
+    prices[symbol] = results[i].data.price;
+  });
 
   return prices;
 }
@@ -43,16 +42,18 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const prices = await getLivePricesFinnhub();
+    const prices = await getLivePricesTwelveData();
 
-    if (!prices['EUR/USD']) {
-      console.error('Error: Missing live price for EUR/USD:', prices);
-      return res.status(500).json({ message: 'Failed to fetch EUR/USD live market price. Please try again later.' });
+    if (!prices['XAU/USD'] || !prices['EUR/USD'] || !prices['US30']) {
+      console.error('Error: Missing live price(s):', prices);
+      return res.status(500).json({ message: 'Failed to fetch live market prices. Please try again later.' });
     }
 
     const marketContext = `
 Current Market Prices:
+Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
+US30 (Dow Jones): ${prices['US30']}
 `;
 
     console.log('Market Context:', marketContext);
