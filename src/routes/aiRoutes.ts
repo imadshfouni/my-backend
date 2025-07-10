@@ -16,7 +16,6 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-// 🔷 Helper: fetch live prices
 async function getLivePrices() {
   const symbols = ['XAU/USD', 'EUR/USD', 'US30'];
   const promises = symbols.map(symbol =>
@@ -45,12 +44,20 @@ router.post('/', async (req, res) => {
   try {
     const prices = await getLivePrices();
 
+    // ✅ Step 1: check if any price failed
+    if (!prices['XAU/USD'] || !prices['EUR/USD'] || !prices['US30']) {
+      console.error('Error: Missing live price(s):', prices);
+      return res.status(500).json({ message: 'Failed to fetch live market prices. Please try again later.' });
+    }
+
     const marketContext = `
 Current Market Prices:
 Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
 US30 (Dow Jones): ${prices['US30']}
 `;
+
+    console.log('Market Context:', marketContext);
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
@@ -63,7 +70,7 @@ US30 (Dow Jones): ${prices['US30']}
     const result = completion.choices[0]?.message?.content || '';
 
     res.json({ result });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Error', error: error.message });
   }
