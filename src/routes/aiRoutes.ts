@@ -17,7 +17,7 @@ const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
 async function getLivePricesTwelveData() {
-  const symbols = ['XAU/USD', 'EUR/USD', 'US30'];
+  const symbols = ['XAU/USD', 'EUR/USD'];
   const promises = symbols.map(symbol =>
     axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
       params: { symbol, apikey: TWELVE_DATA_API_KEY },
@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
   try {
     const prices = await getLivePricesTwelveData();
 
-    if (!prices['XAU/USD'] || !prices['EUR/USD'] || !prices['US30']) {
+    if (!prices['XAU/USD'] || !prices['EUR/USD']) {
       console.error('Error: Missing live price(s):', prices);
       return res.status(500).json({ message: 'Failed to fetch live market prices. Please try again later.' });
     }
@@ -53,7 +53,6 @@ router.post('/', async (req, res) => {
 Current Market Prices:
 Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
-US30 (Dow Jones): ${prices['US30']}
 `;
 
     console.log('Market Context:', marketContext);
