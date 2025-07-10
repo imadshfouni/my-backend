@@ -34,26 +34,48 @@ async function getLivePricesTwelveData() {
   return prices;
 }
 
-async function getTrendAndLevels() {
+async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
   const response = await axios.get(`${TWELVE_DATA_BASE_URL}/time_series`, {
     params: {
-      symbol: 'XAU/USD',
-      interval: '1h',
-      outputsize: 20,
+      symbol,
+      interval,
+      outputsize: length,
       apikey: TWELVE_DATA_API_KEY
     }
   });
 
-  const candles = response.data.values.map(c => parseFloat(c.close));
+  return response.data.values.reverse().map(c => ({
+    time: c.datetime,
+    open: parseFloat(c.open),
+    high: parseFloat(c.high),
+    low: parseFloat(c.low),
+    close: parseFloat(c.close)
+  }));
+}
 
-  let trend = 'neutral';
-  if (candles[0] > candles[19]) trend = 'bullish';
-  else if (candles[0] < candles[19]) trend = 'bearish';
+function computeTrendStructure(candles) {
+  const first = candles[0].close;
+  const last = candles[candles.length - 1].close;
 
-  const high = Math.max(...candles);
-  const low = Math.min(...candles);
+  if (last > first) return { name: 'Trend Structure', value: 'Bullish' };
+  if (last < first) return { name: 'Trend Structure', value: 'Bearish' };
+  return { name: 'Trend Structure', value: 'Neutral' };
+}
 
-  return { trend, support: low, resistance: high };
+function computeEMACross(candles) {
+  const ema = (length, index) => {
+    const slice = candles.slice(index - length + 1, index + 1);
+    const sum = slice.reduce((acc, c) => acc + c.close, 0);
+    return sum / length;
+  };
+
+  const latestIndex = candles.length - 1;
+  const ema20 = ema(20, latestIndex);
+  const ema50 = ema(50, latestIndex);
+
+  if (ema20 > ema50) return { name: 'EMA 20/50 Cross', value: 'Bullish' };
+  if (ema20 < ema50) return { name: 'EMA 20/50 Cross', value: 'Bearish' };
+  return { name: 'EMA 20/50 Cross', value: 'Neutral' };
 }
 
 router.post('/', async (req, res) => {
@@ -65,21 +87,34 @@ router.post('/', async (req, res) => {
 
   try {
     const prices = await getLivePricesTwelveData();
-    const { trend, support, resistance } = await getTrendAndLevels();
+    const candles = await fetchCandles();
 
     if (!prices['XAU/USD'] || !prices['EUR/USD']) {
       console.error('Error: Missing live price(s):', prices);
       return res.status(500).json({ message: 'Failed to fetch live market prices. Please try again later.' });
     }
 
+    const indicators = [
+      computeTrendStructure(candles),
+      computeEMACross(candles)
+    ];
+
+    const bullishCount = indicators.filter(i => i.value === 'Bullish').length;
+    const bearishCount = indicators.filter(i => i.value === 'Bearish').length;
+
+    const confluence = bullishCount > bearishCount ? 'Bullish' : 'Bearish';
+
     const marketContext = `
 Current Market Prices:
 Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
 
-Current H1 Trend: ${trend}
-Nearest Support: ${support}
-Nearest Resistance: ${resistance}
+Indicators:
+${indicators.map(i => `✅ ${i.name}: ${i.value}`).join('\n')}
+
+Bullish confirmations: ${bullishCount}
+Bearish confirmations: ${bearishCount}
+Overall confluence: ${confluence}
 `;
 
     console.log('Market Context:', marketContext);
