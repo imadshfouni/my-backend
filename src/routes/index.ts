@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import aiRoutes from './aiRoutes';
 import chatRoutes from './chatRoutes';
 import uploadRoutes from './uploadRoutes';
 import sessionRoutes from './sessionRoutes';
@@ -22,5 +23,6 @@ router.use('/auth', authRoutes);
 router.use('/forex', forexRoutes);
 router.use('/knowledge', knowledgeRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/ai', aiRoutes);  // ✅ added this line
 
 export default router;
