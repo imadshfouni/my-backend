@@ -34,6 +34,28 @@ async function getLivePricesTwelveData() {
   return prices;
 }
 
+async function getTrendAndLevels() {
+  const response = await axios.get(`${TWELVE_DATA_BASE_URL}/time_series`, {
+    params: {
+      symbol: 'XAU/USD',
+      interval: '1h',
+      outputsize: 20,
+      apikey: TWELVE_DATA_API_KEY
+    }
+  });
+
+  const candles = response.data.values.map(c => parseFloat(c.close));
+
+  let trend = 'neutral';
+  if (candles[0] > candles[19]) trend = 'bullish';
+  else if (candles[0] < candles[19]) trend = 'bearish';
+
+  const high = Math.max(...candles);
+  const low = Math.min(...candles);
+
+  return { trend, support: low, resistance: high };
+}
+
 router.post('/', async (req, res) => {
   const { input } = req.body;
 
@@ -43,6 +65,7 @@ router.post('/', async (req, res) => {
 
   try {
     const prices = await getLivePricesTwelveData();
+    const { trend, support, resistance } = await getTrendAndLevels();
 
     if (!prices['XAU/USD'] || !prices['EUR/USD']) {
       console.error('Error: Missing live price(s):', prices);
@@ -53,6 +76,10 @@ router.post('/', async (req, res) => {
 Current Market Prices:
 Gold (XAU/USD): ${prices['XAU/USD']}
 EUR/USD: ${prices['EUR/USD']}
+
+Current H1 Trend: ${trend}
+Nearest Support: ${support}
+Nearest Resistance: ${resistance}
 `;
 
     console.log('Market Context:', marketContext);
