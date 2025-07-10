@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',  // ✅ FIXED HERE
       messages: [{ role: 'user', content: input }],
     });
 
@@ -30,4 +30,3 @@ router.post('/', async (req, res) => {
 });
 
 export default router;
-
