@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from 'express';
-import session from 'express-session';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
@@ -8,6 +7,7 @@ import apiRoutes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { ConfigManager } from './utils/config';
 import { ForexDataService } from './services/ForexDataService';
+import { sessionManager } from './middlewares/sessionManager'; // ✅ use your session manager
 
 // Initialize services
 const forexService = ForexDataService.getInstance();
@@ -15,7 +15,6 @@ forexService.initialize();
 
 // Load environment variables
 const PORT = ConfigManager.get('PORT', '3000');
-const SESSION_SECRET = ConfigManager.get('SESSION_SECRET', 'forex_advisor_secret');
 const UPLOAD_DIR = ConfigManager.get('UPLOAD_DIR', 'uploads');
 
 // Create Express app
@@ -38,12 +37,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use(session({
-  secret: SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
-}));
+app.use(sessionManager); // ✅ use the custom session middleware
 
 // Serve static files from the uploads directory
 app.use(`/${UPLOAD_DIR}`, express.static(UPLOAD_DIR));
@@ -56,7 +50,7 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 
 // Handle uncaught exceptions
