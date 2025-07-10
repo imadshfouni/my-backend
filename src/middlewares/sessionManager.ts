@@ -13,6 +13,7 @@ declare module 'express-session' {
       type?: 'text' | 'image';
       imageUrl?: string;
     }>;
+    systemChoice?: string; // ✅ added field
   }
 }
 
@@ -50,7 +51,7 @@ export const addMessageToSession = (req: Request, message: SessionData['chatHist
     req.session.chatHistory = [];
   }
   req.session.chatHistory.push(message);
-  
+
   // Limit history to last 50 messages
   if (req.session.chatHistory.length > 50) {
     req.session.chatHistory = req.session.chatHistory.slice(-50);
