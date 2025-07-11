@@ -16,8 +16,14 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-async function getLivePricesTwelveData() {
-  const symbols = ['XAU/USD', 'EUR/USD'];
+// 🪄 Extracts a trading symbol like XAU/USD from text
+function extractSymbol(text: string): string | null {
+  const match = text.match(/\b[A-Z]{3,5}\/[A-Z]{3,5}\b/);
+  return match ? match[0].toUpperCase() : null;
+}
+
+// 🔷 Fetch live prices for one or more symbols
+async function getLivePricesTwelveData(symbols: string[]) {
   const promises = symbols.map(symbol =>
     axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
       params: { symbol, apikey: TWELVE_DATA_API_KEY },
@@ -34,7 +40,8 @@ async function getLivePricesTwelveData() {
   return prices;
 }
 
-async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
+// 🔷 Fetch candles for a given symbol
+async function fetchCandles(symbol: string, interval = '1h', length = 50) {
   const response = await axios.get(`${TWELVE_DATA_BASE_URL}/time_series`, {
     params: {
       symbol,
@@ -53,6 +60,7 @@ async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
   }));
 }
 
+// 🔷 Indicator logic remains unchanged
 function computeTrendStructure(candles: any[]) {
   const first = candles[0].close;
   const last = candles[candles.length - 1].close;
@@ -127,6 +135,7 @@ function computeMACD(candles: any[]) {
   return { name: 'MACD', value: 'Neutral' };
 }
 
+// 🔷 POST /chat route
 router.post('/chat', async (req, res) => {
   const { input } = req.body;
 
@@ -143,9 +152,19 @@ router.post('/chat', async (req, res) => {
     });
   }
 
+  const symbol = extractSymbol(input);
+
+  if (!symbol) {
+    return res.status(400).json({ message: `Could not detect a symbol in your input. Please specify like 'XAU/USD' or 'EUR/USD'.` });
+  }
+
+  if (!req.app.locals.supportedSymbols?.has(symbol)) {
+    return res.status(400).json({ message: `Symbol '${symbol}' is not supported.` });
+  }
+
   try {
-    const prices = await getLivePricesTwelveData();
-    const candles = await fetchCandles();
+    const prices = await getLivePricesTwelveData([symbol]);
+    const candles = await fetchCandles(symbol);
 
     const indicators = [
       computeTrendStructure(candles),
@@ -165,9 +184,8 @@ router.post('/chat', async (req, res) => {
     const confluence = bullishCount > bearishCount ? 'Bullish' : 'Bearish';
 
     const marketContext = `
-Current Market Prices:
-Gold (XAU/USD): ${prices['XAU/USD']}
-EUR/USD: ${prices['EUR/USD']}
+Current Market Price:
+${symbol}: ${prices[symbol]}
 
 Indicators:
 ${indicators.map(i => `✅ ${i.name}: ${i.value}`).join('\n')}
