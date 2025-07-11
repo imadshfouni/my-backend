@@ -54,14 +54,14 @@ app.use(`/${UPLOAD_DIR}`, express.static(UPLOAD_DIR));
 // 🪄 Load and refresh supported forex symbols
 async function loadSupportedSymbols() {
   try {
-    const res = await fetch(`https://api.twelvedata.com/symbol_search?symbol=&exchange=forex&apikey=${TWELVE_DATA_API_KEY}`);
+    const res = await fetch(`https://api.twelvedata.com/forex_pairs?apikey=${TWELVE_DATA_API_KEY}`);
     const data = await res.json();
 
     const symbols = new Set<string>();
 
     if (data.data) {
       data.data.forEach((item: any) => {
-        const cleanSymbol = item.symbol.split(':')[0].toUpperCase();
+        const cleanSymbol = `${item.symbol}`.toUpperCase();
         symbols.add(cleanSymbol);
       });
       app.locals.supportedSymbols = symbols;
