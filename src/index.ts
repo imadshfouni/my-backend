@@ -51,10 +51,10 @@ app.use(sessionManager);
 // Serve static files from the uploads directory
 app.use(`/${UPLOAD_DIR}`, express.static(UPLOAD_DIR));
 
-// 🪄 Load and refresh supported symbols
+// 🪄 Load and refresh supported forex symbols
 async function loadSupportedSymbols() {
   try {
-    const res = await fetch(`https://api.twelvedata.com/symbol_search?symbol=&apikey=${TWELVE_DATA_API_KEY}`);
+    const res = await fetch(`https://api.twelvedata.com/symbol_search?symbol=&exchange=forex&apikey=${TWELVE_DATA_API_KEY}`);
     const data = await res.json();
 
     const symbols = new Set<string>();
@@ -66,7 +66,7 @@ async function loadSupportedSymbols() {
       });
       app.locals.supportedSymbols = symbols;
 
-      console.log(`✅ Loaded ${symbols.size} supported symbols from Twelve Data.`);
+      console.log(`✅ Loaded ${symbols.size} forex symbols from Twelve Data.`);
       console.log(`Sample symbols: ${[...symbols].slice(0, 10).join(', ')}`);
     } else {
       console.error('Failed to load symbols:', data);
