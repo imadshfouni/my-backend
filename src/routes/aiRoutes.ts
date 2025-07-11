@@ -63,6 +63,18 @@ function computeMACD(candles: any[]) {
   return m>s?'Bullish':m<s?'Bearish':'Neutral';
 }
 
+// 🧠 Detect requested symbol
+function detectSymbol(input: string): string {
+  const text = input.toLowerCase();
+  if (text.includes('gold') || text.includes('xau')) return 'XAU/USD';
+  if (text.includes('btc') || text.includes('bitcoin')) return 'BTC/USD';
+  if (text.includes('eur')) return 'EUR/USD';
+  if (text.includes('gbp')) return 'GBP/USD';
+  if (text.includes('nasdaq') || text.includes('nas')) return 'NAS100';
+  if (text.includes('sp500') || text.includes('s&p')) return 'US500';
+  return 'XAU/USD'; // default
+}
+
 router.post('/chat', async (req, res) => {
   const { input } = req.body;
   if (!input) return res.status(400).json({ message: 'Missing input' });
@@ -87,8 +99,9 @@ router.post('/chat', async (req, res) => {
   }
 
   try {
-    const price = await getLivePrice('XAU/USD');
-    const candles = await fetchCandles('XAU/USD');
+    const symbol = detectSymbol(input);
+    const price = await getLivePrice(symbol);
+    const candles = await fetchCandles(symbol);
 
     const confirmations = [
       computeTrendStructure(candles),
@@ -110,8 +123,8 @@ router.post('/chat', async (req, res) => {
 
     const reason =
       bullish > bearish
-        ? `Given the bullish trend in Gold (XAU/USD) and the confluence of bullish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for buying opportunities.`
-        : `Given the bearish trend in Gold (XAU/USD) and the confluence of bearish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for selling opportunities.`;
+        ? `Given the bullish trend in ${symbol} and the confluence of bullish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for buying opportunities.`
+        : `Given the bearish trend in ${symbol} and the confluence of bearish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for selling opportunities.`;
 
     const tradeSignal = `
 📈 Direction: ${direction}  
