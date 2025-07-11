@@ -172,6 +172,8 @@ Supported symbols: ${[...symbolsToFetch].join(', ')}
 
 Market data:
 ${indicatorsSummary}
+
+You are expected to help the user not only with market analysis but also with risk management, lot sizing, and general trading strategy questions. Respond professionally, in Arabic if the user writes in Arabic, otherwise in English. Always guide the user back to trading if the question is unrelated.
 `;
 
     const completion = await openai.chat.completions.create({
