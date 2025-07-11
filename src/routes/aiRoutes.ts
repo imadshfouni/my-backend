@@ -16,39 +16,6 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-function extractSymbol(text: string, supportedSymbols: Set<string>): string | null {
-  const normalized = text.toUpperCase();
-
-  const nicknames: Record<string, string> = {
-    GOLD: 'XAU/USD',
-    SILVER: 'XAG/USD',
-    NASDAQ: 'NAS100',
-    NAS100: 'NAS100',
-    SP500: 'SPX500',
-    DOW: 'DJI30',
-    BTC: 'BTC/USD',
-    ETH: 'ETH/USD'
-  };
-
-  for (const [key, value] of Object.entries(nicknames)) {
-    if (normalized.includes(key) && supportedSymbols.has(value)) {
-      return value;
-    }
-  }
-
-  const matchSlash = normalized.match(/\b[A-Z]{3}\/[A-Z]{3}\b/);
-  if (matchSlash && supportedSymbols.has(matchSlash[0])) return matchSlash[0];
-
-  const matchNoSlash = normalized.match(/\b[A-Z]{6}\b/);
-  if (matchNoSlash && supportedSymbols.has(matchNoSlash[0])) return matchNoSlash[0];
-
-  for (const word of normalized.split(/\s+/)) {
-    if (supportedSymbols.has(word)) return word;
-  }
-
-  return null;
-}
-
 async function getLivePricesTwelveData(symbols: string[]) {
   const promises = symbols.map(symbol =>
     axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
@@ -170,52 +137,41 @@ router.post('/chat', async (req, res) => {
 
   if (['hi', 'hello', 'hey'].some(greet => lowerInput.includes(greet))) {
     return res.json({
-      result: `Hello! I’m your trading advisor. Tell me what you’d like me to analyze (e.g., Gold, EUR/USD, NASDAQ).`
+      result: `Hello! I’m your trading advisor. Tell me what you’d like me to analyze (e.g., Gold, EUR/USD, BTC/USD).`
     });
   }
 
   const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
-  const symbol = extractSymbol(input, supportedSymbols);
-
-  if (!symbol) {
-    return res.status(400).json({ message: `Could not detect a symbol in your input. Please specify like 'XAU/USD' or 'EUR/USD'.` });
-  }
-
-  if (!supportedSymbols || !supportedSymbols.has(symbol)) {
-    return res.status(400).json({ message: `Symbol '${symbol}' is not supported.` });
-  }
 
   try {
-    const prices = await getLivePricesTwelveData([symbol]);
-    const candles = await fetchCandles(symbol);
+    const symbolsToFetch = ['EUR/USD', 'GBP/USD', 'BTC/USD', 'ETH/USD', 'XAU/USD', 'XAG/USD']
+      .filter(s => supportedSymbols.has(s));
 
-    const indicators = [
-      computeTrendStructure(candles),
-      computeEMACross(candles),
-      computeRSI(candles),
-      computeMACD(candles),
-    ];
+    const prices = await getLivePricesTwelveData(symbolsToFetch);
 
-    const bullishCount = indicators.filter(i =>
-      ['Bullish', 'Oversold'].includes(i.value)
-    ).length;
+    const candlesData: Record<string, any[]> = {};
+    for (const symbol of symbolsToFetch) {
+      candlesData[symbol] = await fetchCandles(symbol);
+    }
 
-    const bearishCount = indicators.filter(i =>
-      ['Bearish', 'Overbought'].includes(i.value)
-    ).length;
+    const indicatorsSummary = symbolsToFetch.map(symbol => {
+      const candles = candlesData[symbol];
+      const indicators = [
+        computeTrendStructure(candles),
+        computeEMACross(candles),
+        computeRSI(candles),
+        computeMACD(candles),
+      ];
 
-    const confluence = bullishCount > bearishCount ? 'Bullish' : 'Bearish';
+      const summary = indicators.map(i => `${i.name}: ${i.value}`).join(', ');
+      return `${symbol} → Price: ${prices[symbol]}, Indicators: ${summary}`;
+    }).join('\n');
 
     const marketContext = `
-Current Market Price:
-${symbol}: ${prices[symbol]}
+Supported symbols: ${[...supportedSymbols].join(', ')}
 
-Indicators:
-${indicators.map(i => `✅ ${i.name}: ${i.value}`).join('\n')}
-
-Bullish confirmations: ${bullishCount}
-Bearish confirmations: ${bearishCount}
-Overall confluence: ${confluence}
+Market data:
+${indicatorsSummary}
 `;
 
     const completion = await openai.chat.completions.create({
