@@ -16,29 +16,34 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-// 🪄 Extracts a trading symbol like XAU/USD or xauusd or gold
-function extractSymbol(text: string): string | null {
+function extractSymbol(text: string, supportedSymbols: Set<string>): string | null {
   const normalized = text.toUpperCase();
-
-  const matchSlash = normalized.match(/\b[A-Z]{3}\/[A-Z]{3}\b/);
-  if (matchSlash) return matchSlash[0];
-
-  const matchNoSlash = normalized.match(/\b[A-Z]{6}\b/);
-  if (matchNoSlash) {
-    const sym = matchNoSlash[0];
-    return `${sym.substring(0,3)}/${sym.substring(3,6)}`;
-  }
 
   const nicknames: Record<string, string> = {
     GOLD: 'XAU/USD',
-    EUR: 'EUR/USD',
-    EURO: 'EUR/USD',
-    USD: 'USD',
-    GBP: 'GBP/USD'
+    SILVER: 'XAG/USD',
+    NASDAQ: 'NAS100',
+    NAS100: 'NAS100',
+    SP500: 'SPX500',
+    DOW: 'DJI30',
+    BTC: 'BTC/USD',
+    ETH: 'ETH/USD'
   };
 
   for (const [key, value] of Object.entries(nicknames)) {
-    if (normalized.includes(key)) return value;
+    if (normalized.includes(key) && supportedSymbols.has(value)) {
+      return value;
+    }
+  }
+
+  const matchSlash = normalized.match(/\b[A-Z]{3}\/[A-Z]{3}\b/);
+  if (matchSlash && supportedSymbols.has(matchSlash[0])) return matchSlash[0];
+
+  const matchNoSlash = normalized.match(/\b[A-Z]{6}\b/);
+  if (matchNoSlash && supportedSymbols.has(matchNoSlash[0])) return matchNoSlash[0];
+
+  for (const word of normalized.split(/\s+/)) {
+    if (supportedSymbols.has(word)) return word;
   }
 
   return null;
@@ -154,7 +159,6 @@ function computeMACD(candles: any[]) {
   return { name: 'MACD', value: 'Neutral' };
 }
 
-// 🔷 POST /chat route
 router.post('/chat', async (req, res) => {
   const { input } = req.body;
 
@@ -170,13 +174,12 @@ router.post('/chat', async (req, res) => {
     });
   }
 
-  const symbol = extractSymbol(input);
+  const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
+  const symbol = extractSymbol(input, supportedSymbols);
 
   if (!symbol) {
     return res.status(400).json({ message: `Could not detect a symbol in your input. Please specify like 'XAU/USD' or 'EUR/USD'.` });
   }
-
-  const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
 
   if (!supportedSymbols || !supportedSymbols.has(symbol)) {
     return res.status(400).json({ message: `Symbol '${symbol}' is not supported.` });
