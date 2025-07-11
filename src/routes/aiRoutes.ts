@@ -26,7 +26,7 @@ async function getLivePricesTwelveData() {
 
   const results = await Promise.all(promises);
 
-  const prices = {};
+  const prices: Record<string, string> = {};
   symbols.forEach((symbol, i) => {
     prices[symbol] = results[i].data.price;
   });
@@ -44,7 +44,7 @@ async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
     }
   });
 
-  return response.data.values.reverse().map(c => ({
+  return response.data.values.reverse().map((c: any) => ({
     time: c.datetime,
     open: parseFloat(c.open),
     high: parseFloat(c.high),
@@ -53,7 +53,7 @@ async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
   }));
 }
 
-function computeTrendStructure(candles) {
+function computeTrendStructure(candles: any[]) {
   const first = candles[0].close;
   const last = candles[candles.length - 1].close;
 
@@ -62,10 +62,10 @@ function computeTrendStructure(candles) {
   return { name: 'Trend Structure', value: 'Neutral' };
 }
 
-function computeEMACross(candles) {
-  const ema = (length, index) => {
+function computeEMACross(candles: any[]) {
+  const ema = (length: number, index: number) => {
     const slice = candles.slice(index - length + 1, index + 1);
-    const sum = slice.reduce((acc, c) => acc + c.close, 0);
+    const sum = slice.reduce((acc: number, c: any) => acc + c.close, 0);
     return sum / length;
   };
 
@@ -78,7 +78,7 @@ function computeEMACross(candles) {
   return { name: 'EMA 20/50 Cross', value: 'Neutral' };
 }
 
-function computeRSI(candles, period = 14) {
+function computeRSI(candles: any[], period = 14) {
   const closes = candles.map(c => c.close);
   const deltas = [];
 
@@ -102,10 +102,10 @@ function computeRSI(candles, period = 14) {
   return { name: 'RSI', value: 'Neutral' };
 }
 
-function computeMACD(candles) {
+function computeMACD(candles: any[]) {
   const closes = candles.map(c => c.close);
 
-  const ema = (arr, length) => {
+  const ema = (arr: number[], length: number) => {
     const k = 2 / (length + 1);
     let emaArr = [arr[0]];
     for (let i = 1; i < arr.length; i++) {
@@ -127,60 +127,7 @@ function computeMACD(candles) {
   return { name: 'MACD', value: 'Neutral' };
 }
 
-function computeBollingerBands(candles, period = 20) {
-  const closes = candles.slice(-period).map(c => c.close);
-  const mean = closes.reduce((acc, val) => acc + val, 0) / period;
-  const variance = closes.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / period;
-  const stddev = Math.sqrt(variance);
-
-  const latestClose = candles[candles.length - 1].close;
-
-  const upper = mean + 2 * stddev;
-  const lower = mean - 2 * stddev;
-
-  if (latestClose > upper) return { name: 'Bollinger Bands', value: 'Breakout Above' };
-  if (latestClose < lower) return { name: 'Bollinger Bands', value: 'Breakout Below' };
-  return { name: 'Bollinger Bands', value: 'Within Bands' };
-}
-
-function computeVolumeSpike(candles) {
-  const volumes = candles.map(c => c.high - c.low); 
-  const avgVol = volumes.slice(0, -1).reduce((acc, v) => acc + v, 0) / (volumes.length - 1);
-  const latestVol = volumes[volumes.length - 1];
-
-  if (latestVol > 1.5 * avgVol) return { name: 'Volume Spike', value: 'High' };
-  return { name: 'Volume Spike', value: 'Normal' };
-}
-
-function computeFibonacciRetracement(candles) {
-  const highs = candles.map(c => c.high);
-  const lows = candles.map(c => c.low);
-  const high = Math.max(...highs);
-  const low = Math.min(...lows);
-  const current = candles[candles.length - 1].close;
-  const retracement38 = high - 0.382 * (high - low);
-  const retracement61 = high - 0.618 * (high - low);
-
-  if (current >= retracement61 && current <= retracement38) {
-    return { name: 'Fibonacci Zone', value: 'In Retracement Zone' };
-  }
-  return { name: 'Fibonacci Zone', value: 'Outside Zone' };
-}
-
-function computeCandlestickPattern(candles) {
-  const last = candles[candles.length - 1];
-  const prev = candles[candles.length - 2];
-
-  if (last.close > last.open && prev.close < prev.open && last.close > prev.open && last.open < prev.close) {
-    return { name: 'Candlestick Pattern', value: 'Bullish Engulfing' };
-  }
-  if (last.close < last.open && prev.close > prev.open && last.close < prev.open && last.open > prev.close) {
-    return { name: 'Candlestick Pattern', value: 'Bearish Engulfing' };
-  }
-  return { name: 'Candlestick Pattern', value: 'No Pattern' };
-}
-
-router.post('/', async (req, res) => {
+router.post('/chat', async (req, res) => {
   const { input } = req.body;
 
   if (!input) {
@@ -191,28 +138,19 @@ router.post('/', async (req, res) => {
     const prices = await getLivePricesTwelveData();
     const candles = await fetchCandles();
 
-    if (!prices['XAU/USD'] || !prices['EUR/USD']) {
-      console.error('Error: Missing live price(s):', prices);
-      return res.status(500).json({ message: 'Failed to fetch live market prices. Please try again later.' });
-    }
-
     const indicators = [
       computeTrendStructure(candles),
       computeEMACross(candles),
       computeRSI(candles),
       computeMACD(candles),
-      computeBollingerBands(candles),
-      computeVolumeSpike(candles),
-      computeFibonacciRetracement(candles),
-      computeCandlestickPattern(candles)
     ];
 
     const bullishCount = indicators.filter(i =>
-      ['Bullish', 'Oversold', 'Breakout Above', 'High', 'In Retracement Zone', 'Bullish Engulfing'].includes(i.value)
+      ['Bullish', 'Oversold'].includes(i.value)
     ).length;
 
     const bearishCount = indicators.filter(i =>
-      ['Bearish', 'Overbought', 'Breakout Below', 'Bearish Engulfing'].includes(i.value)
+      ['Bearish', 'Overbought'].includes(i.value)
     ).length;
 
     const confluence = bullishCount > bearishCount ? 'Bullish' : 'Bearish';
