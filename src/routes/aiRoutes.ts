@@ -148,12 +148,12 @@ router.post('/chat', async (req, res) => {
   const prompt = `
 ${languageInstruction}
 
-Here is the latest trade signal and reason:
+Here is the most recent trade signal and analysis context you provided to the user earlier:
 ${tradeSignalSummary || 'No trade signal has been provided yet.'}
 
-User says: "${input}"
+The user now says: "${input}"
 
-Please reply professionally and motivationally, and if the user asks follow-up questions about the above signal, explain clearly.
+If the user is asking a follow-up question about the previous analysis or anything trading-related, respond flexibly and professionally, referring to the context above. Do not reset the conversation. Always keep your tone motivational and match the language the user used.
 `;
 
   try {
