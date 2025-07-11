@@ -135,11 +135,12 @@ router.post('/chat', async (req, res) => {
 
   const lowerInput = input.toLowerCase();
 
-  if (['hi', 'hello', 'hey'].some(greet => lowerInput.includes(greet))) {
-    return res.json({
-      result: `Hello! I’m your trading advisor. Tell me what you’d like me to analyze (e.g., Gold, EUR/USD, BTC/USD).`
-    });
-  }
+if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => lowerInput.includes(greet))) {
+  return res.json({
+    result: `Welcome! I’m here to help you trade with confidence and discipline. How can I assist you with your trading today?`
+  });
+}
+
 
   const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
 
