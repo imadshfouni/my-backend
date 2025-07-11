@@ -56,7 +56,6 @@ async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
 function computeTrendStructure(candles: any[]) {
   const first = candles[0].close;
   const last = candles[candles.length - 1].close;
-
   if (last > first) return { name: 'Trend Structure', value: 'Bullish' };
   if (last < first) return { name: 'Trend Structure', value: 'Bearish' };
   return { name: 'Trend Structure', value: 'Neutral' };
@@ -183,7 +182,7 @@ Overall confluence: ${confluence}
     res.json({ result });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ message: 'Error', error: error.message });
+    res.status(500).json({ message: 'Error', error: (error as Error).message });
   }
 });
 
