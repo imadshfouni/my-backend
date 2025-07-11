@@ -10,16 +10,13 @@ import { ForexDataService } from './services/ForexDataService';
 import { sessionManager } from './middlewares/sessionManager';
 import fetch from 'node-fetch';
 
-// Initialize services
 const forexService = ForexDataService.getInstance();
 forexService.initialize();
 
-// Load environment variables
 const PORT = ConfigManager.get('PORT', '3000');
 const UPLOAD_DIR = ConfigManager.get('UPLOAD_DIR', 'uploads');
 const TWELVE_DATA_API_KEY = ConfigManager.get('TWELVE_DATA_API_KEY', '');
 
-// Create Express app
 const app = express();
 
 app.set('trust proxy', 1);
@@ -60,20 +57,18 @@ async function loadSymbolsFromEndpoint(endpoint: string, label: string): Promise
 async function loadSupportedSymbols() {
   console.log(`🔄 Loading supported symbols from Twelve Data…`);
 
-  const [forex, crypto, indices, commodities] = await Promise.all([
+  const [forex, crypto, commodities] = await Promise.all([
     loadSymbolsFromEndpoint('forex_pairs', 'forex'),
     loadSymbolsFromEndpoint('cryptocurrencies', 'crypto'),
-    loadSymbolsFromEndpoint('indices', 'indices'),
     loadSymbolsFromEndpoint('commodities', 'commodities'),
   ]);
 
   const allSymbols = new Set<string>([
     ...forex,
     ...crypto,
-    ...indices,
     ...commodities,
-    'XAU/USD', // explicitly add gold
-    'XAG/USD', // explicitly add silver
+    'XAU/USD',
+    'XAG/USD',
   ]);
 
   app.locals.supportedSymbols = allSymbols;
@@ -82,7 +77,6 @@ async function loadSupportedSymbols() {
   console.log(`Sample symbols: ${[...allSymbols].slice(0, 10).join(', ')}`);
 }
 
-// Initial load & refresh every 6 hours
 loadSupportedSymbols();
 setInterval(loadSupportedSymbols, 6 * 60 * 60 * 1000);
 
