@@ -56,6 +56,7 @@ async function fetchCandles(symbol = 'XAU/USD', interval = '1h', length = 50) {
 function computeTrendStructure(candles: any[]) {
   const first = candles[0].close;
   const last = candles[candles.length - 1].close;
+
   if (last > first) return { name: 'Trend Structure', value: 'Bullish' };
   if (last < first) return { name: 'Trend Structure', value: 'Bearish' };
   return { name: 'Trend Structure', value: 'Neutral' };
@@ -133,6 +134,15 @@ router.post('/chat', async (req, res) => {
     return res.status(400).json({ message: 'Missing input' });
   }
 
+  const lowerInput = input.toLowerCase();
+
+  // If just a greeting
+  if (['hi', 'hello', 'hey'].some(greet => lowerInput.includes(greet))) {
+    return res.json({
+      result: `Hello! I’m your trading advisor. Tell me what you’d like me to analyze (e.g., Gold, EUR/USD, NASDAQ).`
+    });
+  }
+
   try {
     const prices = await getLivePricesTwelveData();
     const candles = await fetchCandles();
@@ -167,8 +177,6 @@ Bearish confirmations: ${bearishCount}
 Overall confluence: ${confluence}
 `;
 
-    console.log('Market Context:', marketContext);
-
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -177,12 +185,12 @@ Overall confluence: ${confluence}
       ],
     });
 
-    const result = completion.choices[0]?.message?.content || '';
+    const result = completion.choices[0]?.message?.content || 'No response from AI.';
 
     res.json({ result });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ message: 'Error', error: (error as Error).message });
+    res.status(500).json({ message: 'Error', error: error.message });
   }
 });
 
