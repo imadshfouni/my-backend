@@ -80,10 +80,10 @@ router.post('/chat', async (req, res) => {
   const isAnalysisRequest = analysisKeywords.some(k => lowerInput.includes(k));
 
   if (!isAnalysisRequest) {
-    const neutralPrompt = isArabic
-      ? 'أنا هنا لمساعدتك في أي أسئلة تتعلق بالتداول. من فضلك أخبرني بما ترغب في تحليله أو مناقشته اليوم.'
-      : 'I’m here to help you with trading-related questions. Please let me know what you’d like to analyze or discuss today.';
-    return res.json({ result: neutralPrompt });
+    const politeResponse = isArabic
+      ? 'أنا بخير، شكرًا لسؤالك! أنا هنا لمساعدتك في التداول. ما الذي تود تحليله أو مناقشته اليوم؟'
+      : 'I’m doing great, thank you for asking! I’m here to help you with your trading. What would you like to analyze or discuss today?';
+    return res.json({ result: politeResponse });
   }
 
   try {
