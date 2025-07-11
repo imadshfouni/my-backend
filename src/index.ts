@@ -22,24 +22,10 @@ const TWELVE_DATA_API_KEY = ConfigManager.get('TWELVE_DATA_API_KEY', '');
 // Create Express app
 const app = express();
 
-// ✅ Tell Express to trust the first proxy (Render/Vercel/Heroku etc.)
 app.set('trust proxy', 1);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, uniqueSuffix + ext);
-  }
-});
-
-// ✅ Use CORS with your real frontend domain
 app.use(cors({
-  origin: 'https://ai.finverseinvest.io', // replace with your frontend URL
+  origin: 'https://ai.finverseinvest.io',
   credentials: true
 }));
 
@@ -48,42 +34,59 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(sessionManager);
 
-// Serve static files from the uploads directory
 app.use(`/${UPLOAD_DIR}`, express.static(UPLOAD_DIR));
 
-// 🪄 Load and refresh supported forex symbols
-async function loadSupportedSymbols() {
+async function loadSymbolsFromEndpoint(endpoint: string, label: string): Promise<Set<string>> {
+  const symbols = new Set<string>();
   try {
-    const res = await fetch(`https://api.twelvedata.com/forex_pairs?apikey=${TWELVE_DATA_API_KEY}`);
+    const res = await fetch(`https://api.twelvedata.com/${endpoint}?apikey=${TWELVE_DATA_API_KEY}`);
     const data = await res.json();
-
-    const symbols = new Set<string>();
 
     if (data.data) {
       data.data.forEach((item: any) => {
         const cleanSymbol = `${item.symbol}`.toUpperCase();
         symbols.add(cleanSymbol);
       });
-      app.locals.supportedSymbols = symbols;
-
-      console.log(`✅ Loaded ${symbols.size} forex symbols from Twelve Data.`);
-      console.log(`Sample symbols: ${[...symbols].slice(0, 10).join(', ')}`);
+      console.log(`✅ Loaded ${symbols.size} ${label} symbols.`);
     } else {
-      console.error('Failed to load symbols:', data);
+      console.error(`❌ Failed to load ${label} symbols`, data);
     }
   } catch (err) {
-    console.error('Error fetching supported symbols:', err);
+    console.error(`❌ Error fetching ${label} symbols`, err);
   }
+  return symbols;
 }
 
-// Initial load and refresh every 6 hours
+async function loadSupportedSymbols() {
+  console.log(`🔄 Loading supported symbols from Twelve Data…`);
+
+  const [forex, crypto, indices, commodities] = await Promise.all([
+    loadSymbolsFromEndpoint('forex_pairs', 'forex'),
+    loadSymbolsFromEndpoint('cryptocurrencies', 'crypto'),
+    loadSymbolsFromEndpoint('indices', 'indices'),
+    loadSymbolsFromEndpoint('commodities', 'commodities'),
+  ]);
+
+  const allSymbols = new Set<string>([
+    ...forex,
+    ...crypto,
+    ...indices,
+    ...commodities,
+    'XAU/USD', // explicitly add gold
+    'XAG/USD', // explicitly add silver
+  ]);
+
+  app.locals.supportedSymbols = allSymbols;
+
+  console.log(`✅ Total supported symbols: ${allSymbols.size}`);
+  console.log(`Sample symbols: ${[...allSymbols].slice(0, 10).join(', ')}`);
+}
+
+// Initial load & refresh every 6 hours
 loadSupportedSymbols();
 setInterval(loadSupportedSymbols, 6 * 60 * 60 * 1000);
 
-// API routes
 app.use('/api', apiRoutes);
-
-// Error handling middleware
 app.use(errorHandler);
 
 app.listen(PORT, () => {
