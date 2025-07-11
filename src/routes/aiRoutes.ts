@@ -16,21 +16,11 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-async function getLivePricesTwelveData(symbols: string[]) {
-  const promises = symbols.map(symbol =>
-    axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
-      params: { symbol, apikey: TWELVE_DATA_API_KEY },
-    })
-  );
-
-  const results = await Promise.all(promises);
-
-  const prices: Record<string, string> = {};
-  symbols.forEach((symbol, i) => {
-    prices[symbol] = results[i].data.price;
+async function getLivePrice(symbol: string) {
+  const response = await axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
+    params: { symbol, apikey: TWELVE_DATA_API_KEY },
   });
-
-  return prices;
+  return parseFloat(response.data.price);
 }
 
 async function fetchCandles(symbol: string, interval = '1h', length = 50) {
@@ -52,117 +42,74 @@ async function fetchCandles(symbol: string, interval = '1h', length = 50) {
   }));
 }
 
-function computeTrendStructure(candles: any[]) {
-  const first = candles[0].close;
-  const last = candles[candles.length - 1].close;
-  return last > first ? 'Bullish' : last < first ? 'Bearish' : 'Neutral';
-}
-
-function computeEMACross(candles: any[]) {
-  const ema = (length: number, index: number) => {
-    const slice = candles.slice(index - length + 1, index + 1);
-    const sum = slice.reduce((acc: number, c: any) => acc + c.close, 0);
-    return sum / length;
-  };
-  const latest = candles.length - 1;
-  const ema20 = ema(20, latest);
-  const ema50 = ema(50, latest);
-  return ema20 > ema50 ? 'Bullish' : ema20 < ema50 ? 'Bearish' : 'Neutral';
-}
-
-function computeRSI(candles: any[], period = 14) {
-  const closes = candles.map(c => c.close);
-  const deltas = closes.slice(1).map((c, i) => c - closes[i]);
-  let gains = 0, losses = 0;
-  deltas.slice(-period).forEach(d => {
-    if (d > 0) gains += d;
-    else losses -= d;
-  });
-  const rs = gains / (losses || 1);
-  const rsi = 100 - (100 / (1 + rs));
-  return rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral';
-}
-
-function computeMACD(candles: any[]) {
-  const closes = candles.map(c => c.close);
-  const ema = (arr: number[], length: number) => {
-    const k = 2 / (length + 1);
-    let emaArr = [arr[0]];
-    for (let i = 1; i < arr.length; i++) {
-      emaArr.push(arr[i] * k + emaArr[i - 1] * (1 - k));
-    }
-    return emaArr;
-  };
-  const ema12 = ema(closes, 12);
-  const ema26 = ema(closes, 26);
-  const macdLine = ema12.map((v, i) => v - ema26[i]);
-  const signalLine = ema(macdLine, 9);
-  const latestMacd = macdLine[macdLine.length - 1];
-  const latestSignal = signalLine[signalLine.length - 1];
-  return latestMacd > latestSignal ? 'Bullish' : latestMacd < latestSignal ? 'Bearish' : 'Neutral';
-}
+// example indicator functions
+function computeTrendStructure(candles: any[]) { const first = candles[0].close, last = candles.at(-1).close; return last > first ? 'Bullish' : last < first ? 'Bearish' : 'Neutral'; }
+function computeEMACross(candles: any[]) { const ema = (len: number, i: number) => candles.slice(i-len+1,i+1).reduce((a,c)=>a+c.close,0)/len; const li=candles.length-1,ema20=ema(20,li),ema50=ema(50,li); return ema20>ema50?'Bullish':ema20<ema50?'Bearish':'Neutral'; }
+function computeRSI(candles: any[], period=14) { const closes=candles.map(c=>c.close), deltas=closes.slice(1).map((c,i)=>c-closes[i]); let g=0,l=0; deltas.slice(-period).forEach(d=>d>0?g+=d:l-=d); const rs=g/(l||1),rsi=100-(100/(1+rs)); return rsi>70?'Overbought':rsi<30?'Oversold':'Neutral'; }
+function computeMACD(candles: any[]) { const closes=candles.map(c=>c.close), ema=(arr,len)=>{const k=2/(len+1);let e=[arr[0]];for(let i=1;i<arr.length;i++)e.push(arr[i]*k+e[i-1]*(1-k));return e},ema12=ema(closes,12),ema26=ema(closes,26),macd=ema12.map((v,i)=>v-ema26[i]),sig=ema(macd,9),m=macd.at(-1),s=sig.at(-1); return m>s?'Bullish':m<s?'Bearish':'Neutral'; }
 
 router.post('/chat', async (req, res) => {
   const { input } = req.body;
+  if (!input) return res.status(400).json({ message: 'Missing input' });
 
-  if (!input) {
-    return res.status(400).json({ message: 'Missing input' });
-  }
-
-  const lowerInput = input.toLowerCase();
-
-  if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => lowerInput.includes(greet))) {
+  if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => input.toLowerCase().includes(greet))) {
     return res.json({
       result: `Welcome! I’m here to help you trade with confidence and discipline. How can I assist you with your trading today?`
     });
   }
 
-  const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
-
   try {
-    const symbolsToFetch = ['XAU/USD']
-      .filter(s => supportedSymbols.has(s));
-
-    const prices = await getLivePricesTwelveData(symbolsToFetch);
+    const price = await getLivePrice('XAU/USD');
     const candles = await fetchCandles('XAU/USD');
 
-    const trend = computeTrendStructure(candles);
-    const emaCross = computeEMACross(candles);
-    const rsi = computeRSI(candles);
-    const macd = computeMACD(candles);
-
-    const confluences = [
-      `Trend Structure: ${trend}`,
-      `EMA 20/50 Cross: ${emaCross}`,
-      `RSI: ${rsi}`,
-      `MACD: ${macd}`
+    const confirmations = [
+      computeTrendStructure(candles),
+      computeEMACross(candles),
+      computeRSI(candles),
+      computeMACD(candles),
+      // Add more confirmations if you like
     ];
 
-    const marketSummary = `
-Gold (XAU/USD) current price: ${prices['XAU/USD']}.
-Overall trend: ${trend}.
-Key technical confluences: ${confluences.join(', ')}.
+    let bullish = 0, bearish = 0;
+    confirmations.forEach(c => {
+      if (c === 'Bullish' || c === 'Oversold') bullish++;
+      if (c === 'Bearish' || c === 'Overbought') bearish++;
+    });
+
+    const direction = bullish > bearish ? 'BUY' : 'SELL';
+    const entry = bullish > bearish ? price + 1 : price - 1;
+    const sl = bullish > bearish ? price - 10 : price + 10;
+    const tp = bullish > bearish ? price + 12 : price - 12;
+
+    const reason =
+      bullish > bearish
+        ? `Given the bullish trend in Gold (XAU/USD) and the confluence of bullish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for buying opportunities.`
+        : `Given the bearish trend in Gold (XAU/USD) and the confluence of bearish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for selling opportunities.`;
+
+    const tradeSignal = `
+📈 Direction: ${direction}  
+🎯 Entry: ${entry.toFixed(2)}  
+🛑 Stop Loss: ${sl.toFixed(2)}  
+🎯 Take Profit: ${tp.toFixed(2)}  
+📝 Reason: ${reason} Current price is ${price.toFixed(2)}.
 `;
 
-    const marketContext = `
-You are provided with the latest market data and confluences. Use this information to generate a clear, actionable trade plan with Direction, Entry, Stop Loss, and Take Profit, phrased in the same language the user used (English or Arabic).
+    const prompt = `
+Here is the computed trade signal and reason:
+${tradeSignal}
 
-Market Summary:
-${marketSummary}
-
-Respond professionally, motivationally, and always include a structured trade plan if analysis is requested. If the user asks about trading concepts, risk management, or strategies, explain clearly and helpfully.
+Please phrase this professionally, clearly, and motivationally in the same language as the user’s input.
 `;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `${marketContext}\n\n${input}` }
+        { role: 'user', content: prompt }
       ],
     });
 
     const result = completion.choices[0]?.message?.content || 'No response from AI.';
-
     res.json({ result });
   } catch (error) {
     console.error('Error:', error);
