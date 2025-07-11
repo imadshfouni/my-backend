@@ -67,10 +67,23 @@ router.post('/chat', async (req, res) => {
   const { input } = req.body;
   if (!input) return res.status(400).json({ message: 'Missing input' });
 
-  if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => input.toLowerCase().includes(greet))) {
+  const lowerInput = input.toLowerCase();
+  const isArabic = /[\u0600-\u06FF]/.test(input);
+
+  if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => lowerInput.includes(greet))) {
     return res.json({
       result: `Welcome! I’m here to help you trade with confidence and discipline. How can I assist you with your trading today?`
     });
+  }
+
+  const analysisKeywords = ['analyze', 'analysis', 'حلل', 'تحليل'];
+  const isAnalysisRequest = analysisKeywords.some(k => lowerInput.includes(k));
+
+  if (!isAnalysisRequest) {
+    const neutralPrompt = isArabic
+      ? 'أنا هنا لمساعدتك في أي أسئلة تتعلق بالتداول. من فضلك أخبرني بما ترغب في تحليله أو مناقشته اليوم.'
+      : 'I’m here to help you with trading-related questions. Please let me know what you’d like to analyze or discuss today.';
+    return res.json({ result: neutralPrompt });
   }
 
   try {
@@ -108,7 +121,6 @@ router.post('/chat', async (req, res) => {
 📝 Reason: ${reason} Current price is ${price.toFixed(2)}.
 `;
 
-    const isArabic = /[\u0600-\u06FF]/.test(input);
     const languageInstruction = isArabic
       ? 'Please respond fully in Arabic.'
       : 'Please respond fully in English.';
