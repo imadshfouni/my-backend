@@ -16,6 +16,9 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
+// 🧠 In-memory session context map
+const sessionContext: Map<string, string> = new Map();
+
 async function getLivePrice(symbol: string) {
   const response = await axios.get(`${TWELVE_DATA_BASE_URL}/price`, {
     params: { symbol, apikey: TWELVE_DATA_API_KEY },
@@ -63,7 +66,7 @@ function computeMACD(candles: any[]) {
   return m>s?'Bullish':m<s?'Bearish':'Neutral';
 }
 
-// 🧠 Detect requested symbol
+// Detect symbol
 function detectSymbol(input: string): string {
   const text = input.toLowerCase();
   if (text.includes('gold') || text.includes('xau')) return 'XAU/USD';
@@ -76,7 +79,7 @@ function detectSymbol(input: string): string {
 }
 
 router.post('/chat', async (req, res) => {
-  const { input } = req.body;
+  const { input, sessionId = 'default' } = req.body;
   if (!input) return res.status(400).json({ message: 'Missing input' });
 
   const lowerInput = input.toLowerCase();
@@ -91,42 +94,38 @@ router.post('/chat', async (req, res) => {
   const analysisKeywords = ['analyze', 'analysis', 'حلل', 'تحليل'];
   const isAnalysisRequest = analysisKeywords.some(k => lowerInput.includes(k));
 
-  if (!isAnalysisRequest) {
-    const politeResponse = isArabic
-      ? 'أنا بخير، شكرًا لسؤالك! أنا هنا لمساعدتك في التداول. ما الذي تود تحليله أو مناقشته اليوم؟'
-      : 'I’m doing great, thank you for asking! I’m here to help you with your trading. What would you like to analyze or discuss today?';
-    return res.json({ result: politeResponse });
-  }
+  let tradeSignalSummary = sessionContext.get(sessionId) || '';
 
-  try {
-    const symbol = detectSymbol(input);
-    const price = await getLivePrice(symbol);
-    const candles = await fetchCandles(symbol);
+  if (isAnalysisRequest) {
+    try {
+      const symbol = detectSymbol(input);
+      const price = await getLivePrice(symbol);
+      const candles = await fetchCandles(symbol);
 
-    const confirmations = [
-      computeTrendStructure(candles),
-      computeEMACross(candles),
-      computeRSI(candles),
-      computeMACD(candles),
-    ];
+      const confirmations = [
+        computeTrendStructure(candles),
+        computeEMACross(candles),
+        computeRSI(candles),
+        computeMACD(candles),
+      ];
 
-    let bullish = 0, bearish = 0;
-    confirmations.forEach(c => {
-      if (c === 'Bullish' || c === 'Oversold') bullish++;
-      if (c === 'Bearish' || c === 'Overbought') bearish++;
-    });
+      let bullish = 0, bearish = 0;
+      confirmations.forEach(c => {
+        if (c === 'Bullish' || c === 'Oversold') bullish++;
+        if (c === 'Bearish' || c === 'Overbought') bearish++;
+      });
 
-    const direction = bullish > bearish ? 'BUY' : 'SELL';
-    const entry = bullish > bearish ? price + 1 : price - 1;
-    const sl = bullish > bearish ? price - 10 : price + 10;
-    const tp = bullish > bearish ? price + 12 : price - 12;
+      const direction = bullish > bearish ? 'BUY' : 'SELL';
+      const entry = bullish > bearish ? price + 1 : price - 1;
+      const sl = bullish > bearish ? price - 10 : price + 10;
+      const tp = bullish > bearish ? price + 12 : price - 12;
 
-    const reason =
-      bullish > bearish
-        ? `Given the bullish trend in ${symbol} and the confluence of bullish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for buying opportunities.`
-        : `Given the bearish trend in ${symbol} and the confluence of bearish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for selling opportunities.`;
+      const reason =
+        bullish > bearish
+          ? `Given the bullish trend in ${symbol} and the confluence of bullish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for buying opportunities.`
+          : `Given the bearish trend in ${symbol} and the confluence of bearish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for selling opportunities.`;
 
-    const tradeSignal = `
+      tradeSignalSummary = `
 📈 Direction: ${direction}  
 🎯 Entry: ${entry.toFixed(2)}  
 🛑 Stop Loss: ${sl.toFixed(2)}  
@@ -134,19 +133,30 @@ router.post('/chat', async (req, res) => {
 📝 Reason: ${reason} Current price is ${price.toFixed(2)}.
 `;
 
-    const languageInstruction = isArabic
-      ? 'Please respond fully in Arabic.'
-      : 'Please respond fully in English.';
+      // Save to session
+      sessionContext.set(sessionId, tradeSignalSummary);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Error computing analysis' });
+    }
+  }
 
-    const prompt = `
+  const languageInstruction = isArabic
+    ? 'Please respond fully in Arabic.'
+    : 'Please respond fully in English.';
+
+  const prompt = `
 ${languageInstruction}
 
-Here is the computed trade signal and reason:
-${tradeSignal}
+Here is the latest trade signal and reason:
+${tradeSignalSummary || 'No trade signal has been provided yet.'}
 
-Please phrase this professionally, clearly, and motivationally.
+User says: "${input}"
+
+Please reply professionally and motivationally, and if the user asks follow-up questions about the above signal, explain clearly.
 `;
 
+  try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -157,9 +167,9 @@ Please phrase this professionally, clearly, and motivationally.
 
     const result = completion.choices[0]?.message?.content || 'No response from AI.';
     res.json({ result });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: 'Error', error: error.message });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error', error: err.message });
   }
 });
 
