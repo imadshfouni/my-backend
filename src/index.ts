@@ -46,7 +46,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use(sessionManager); // ✅ use the custom session middleware
+app.use(sessionManager);
 
 // Serve static files from the uploads directory
 app.use(`/${UPLOAD_DIR}`, express.static(UPLOAD_DIR));
@@ -60,9 +60,14 @@ async function loadSupportedSymbols() {
     const symbols = new Set<string>();
 
     if (data.data) {
-      data.data.forEach((item: any) => symbols.add(item.symbol.toUpperCase()));
+      data.data.forEach((item: any) => {
+        const cleanSymbol = item.symbol.split(':')[0].toUpperCase();
+        symbols.add(cleanSymbol);
+      });
       app.locals.supportedSymbols = symbols;
+
       console.log(`✅ Loaded ${symbols.size} supported symbols from Twelve Data.`);
+      console.log(`Sample symbols: ${[...symbols].slice(0, 10).join(', ')}`);
     } else {
       console.error('Failed to load symbols:', data);
     }
@@ -81,12 +86,10 @@ app.use('/api', apiRoutes);
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
