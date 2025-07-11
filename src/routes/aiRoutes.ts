@@ -55,10 +55,7 @@ async function fetchCandles(symbol: string, interval = '1h', length = 50) {
 function computeTrendStructure(candles: any[]) {
   const first = candles[0].close;
   const last = candles[candles.length - 1].close;
-
-  if (last > first) return { name: 'Trend Structure', value: 'Bullish' };
-  if (last < first) return { name: 'Trend Structure', value: 'Bearish' };
-  return { name: 'Trend Structure', value: 'Neutral' };
+  return last > first ? 'Bullish' : last < first ? 'Bearish' : 'Neutral';
 }
 
 function computeEMACross(candles: any[]) {
@@ -67,43 +64,27 @@ function computeEMACross(candles: any[]) {
     const sum = slice.reduce((acc: number, c: any) => acc + c.close, 0);
     return sum / length;
   };
-
-  const latestIndex = candles.length - 1;
-  const ema20 = ema(20, latestIndex);
-  const ema50 = ema(50, latestIndex);
-
-  if (ema20 > ema50) return { name: 'EMA 20/50 Cross', value: 'Bullish' };
-  if (ema20 < ema50) return { name: 'EMA 20/50 Cross', value: 'Bearish' };
-  return { name: 'EMA 20/50 Cross', value: 'Neutral' };
+  const latest = candles.length - 1;
+  const ema20 = ema(20, latest);
+  const ema50 = ema(50, latest);
+  return ema20 > ema50 ? 'Bullish' : ema20 < ema50 ? 'Bearish' : 'Neutral';
 }
 
 function computeRSI(candles: any[], period = 14) {
   const closes = candles.map(c => c.close);
-  const deltas = [];
-
-  for (let i = 1; i < closes.length; i++) {
-    deltas.push(closes[i] - closes[i - 1]);
-  }
-
+  const deltas = closes.slice(1).map((c, i) => c - closes[i]);
   let gains = 0, losses = 0;
-  for (let i = deltas.length - period; i < deltas.length; i++) {
-    if (deltas[i] > 0) gains += deltas[i];
-    else losses -= deltas[i];
-  }
-
-  const avgGain = gains / period;
-  const avgLoss = losses / period || 1;
-  const rs = avgGain / avgLoss;
+  deltas.slice(-period).forEach(d => {
+    if (d > 0) gains += d;
+    else losses -= d;
+  });
+  const rs = gains / (losses || 1);
   const rsi = 100 - (100 / (1 + rs));
-
-  if (rsi > 70) return { name: 'RSI', value: 'Overbought' };
-  if (rsi < 30) return { name: 'RSI', value: 'Oversold' };
-  return { name: 'RSI', value: 'Neutral' };
+  return rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral';
 }
 
 function computeMACD(candles: any[]) {
   const closes = candles.map(c => c.close);
-
   const ema = (arr: number[], length: number) => {
     const k = 2 / (length + 1);
     let emaArr = [arr[0]];
@@ -112,18 +93,13 @@ function computeMACD(candles: any[]) {
     }
     return emaArr;
   };
-
   const ema12 = ema(closes, 12);
   const ema26 = ema(closes, 26);
   const macdLine = ema12.map((v, i) => v - ema26[i]);
   const signalLine = ema(macdLine, 9);
-
   const latestMacd = macdLine[macdLine.length - 1];
   const latestSignal = signalLine[signalLine.length - 1];
-
-  if (latestMacd > latestSignal) return { name: 'MACD', value: 'Bullish' };
-  if (latestMacd < latestSignal) return { name: 'MACD', value: 'Bearish' };
-  return { name: 'MACD', value: 'Neutral' };
+  return latestMacd > latestSignal ? 'Bullish' : latestMacd < latestSignal ? 'Bearish' : 'Neutral';
 }
 
 router.post('/chat', async (req, res) => {
@@ -135,46 +111,46 @@ router.post('/chat', async (req, res) => {
 
   const lowerInput = input.toLowerCase();
 
-if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => lowerInput.includes(greet))) {
-  return res.json({
-    result: `Welcome! I’m here to help you trade with confidence and discipline. How can I assist you with your trading today?`
-  });
-}
-
+  if (['hi', 'hello', 'hey', 'مرحبا', 'اهلا'].some(greet => lowerInput.includes(greet))) {
+    return res.json({
+      result: `Welcome! I’m here to help you trade with confidence and discipline. How can I assist you with your trading today?`
+    });
+  }
 
   const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
 
   try {
-    const symbolsToFetch = ['XAU/USD', 'BTC/USD', 'EUR/USD']
+    const symbolsToFetch = ['XAU/USD']
       .filter(s => supportedSymbols.has(s));
 
     const prices = await getLivePricesTwelveData(symbolsToFetch);
+    const candles = await fetchCandles('XAU/USD');
 
-    const candlesData: Record<string, any[]> = {};
-    for (const symbol of symbolsToFetch) {
-      candlesData[symbol] = await fetchCandles(symbol);
-    }
+    const trend = computeTrendStructure(candles);
+    const emaCross = computeEMACross(candles);
+    const rsi = computeRSI(candles);
+    const macd = computeMACD(candles);
 
-    const indicatorsSummary = symbolsToFetch.map(symbol => {
-      const candles = candlesData[symbol];
-      const indicators = [
-        computeTrendStructure(candles),
-        computeEMACross(candles),
-        computeRSI(candles),
-        computeMACD(candles),
-      ];
+    const confluences = [
+      `Trend Structure: ${trend}`,
+      `EMA 20/50 Cross: ${emaCross}`,
+      `RSI: ${rsi}`,
+      `MACD: ${macd}`
+    ];
 
-      const summary = indicators.map(i => `${i.name}: ${i.value}`).join(', ');
-      return `${symbol} → Price: ${prices[symbol]}, Indicators: ${summary}`;
-    }).join('\n');
+    const marketSummary = `
+Gold (XAU/USD) current price: ${prices['XAU/USD']}.
+Overall trend: ${trend}.
+Key technical confluences: ${confluences.join(', ')}.
+`;
 
     const marketContext = `
-Supported symbols: ${[...symbolsToFetch].join(', ')}
+You are provided with the latest market data and confluences. Use this information to generate a clear, actionable trade plan with Direction, Entry, Stop Loss, and Take Profit, phrased in the same language the user used (English or Arabic).
 
-Market data:
-${indicatorsSummary}
+Market Summary:
+${marketSummary}
 
-You are expected to help the user not only with market analysis but also with risk management, lot sizing, and general trading strategy questions. Respond professionally, in Arabic if the user writes in Arabic, otherwise in English. Always guide the user back to trading if the question is unrelated.
+Respond professionally, motivationally, and always include a structured trade plan if analysis is requested. If the user asks about trading concepts, risk management, or strategies, explain clearly and helpfully.
 `;
 
     const completion = await openai.chat.completions.create({
