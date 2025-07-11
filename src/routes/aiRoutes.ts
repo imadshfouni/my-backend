@@ -144,7 +144,7 @@ router.post('/chat', async (req, res) => {
   const supportedSymbols: Set<string> = req.app.locals.supportedSymbols;
 
   try {
-    const symbolsToFetch = ['EUR/USD', 'GBP/USD', 'BTC/USD', 'ETH/USD', 'XAU/USD', 'XAG/USD']
+    const symbolsToFetch = ['XAU/USD', 'BTC/USD', 'EUR/USD']
       .filter(s => supportedSymbols.has(s));
 
     const prices = await getLivePricesTwelveData(symbolsToFetch);
@@ -168,7 +168,7 @@ router.post('/chat', async (req, res) => {
     }).join('\n');
 
     const marketContext = `
-Supported symbols: ${[...supportedSymbols].join(', ')}
+Supported symbols: ${[...symbolsToFetch].join(', ')}
 
 Market data:
 ${indicatorsSummary}
