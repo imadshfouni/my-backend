@@ -150,9 +150,9 @@ You must always use the most recent trade signal and analysis context below to g
 Most recent trade signal:
 ${tradeSignalSummary || 'No trade signal has been provided yet.'}
 
-User now says: "${input}"
+The user now says: "${input}"
 
-Assume the user's message is related to trading and the signal context above — even if phrased indirectly — and respond professionally and motivationally, referring to the context if it exists. Never reset the conversation. Always match the user's language.
+The user’s message is always a follow-up or question about the previous analysis, even if it is very short, vague, or indirect. Always answer about the previous trade signal’s timeframe, risk, or reasoning as appropriate. Never reply with a generic greeting or reset the conversation. Always match the language the user used and stay professional and motivational.
 `;
 
   try {
