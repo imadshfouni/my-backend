@@ -16,7 +16,6 @@ const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
 const TWELVE_DATA_BASE_URL = 'https://api.twelvedata.com';
 
-// 🧠 In-memory session context map
 const sessionContext: Map<string, string> = new Map();
 
 async function getLivePrice(symbol: string) {
@@ -66,7 +65,6 @@ function computeMACD(candles: any[]) {
   return m>s?'Bullish':m<s?'Bearish':'Neutral';
 }
 
-// Detect symbol
 function detectSymbol(input: string): string {
   const text = input.toLowerCase();
   if (text.includes('gold') || text.includes('xau')) return 'XAU/USD';
@@ -75,7 +73,7 @@ function detectSymbol(input: string): string {
   if (text.includes('gbp')) return 'GBP/USD';
   if (text.includes('nasdaq') || text.includes('nas')) return 'NAS100';
   if (text.includes('sp500') || text.includes('s&p')) return 'US500';
-  return 'XAU/USD'; // default
+  return 'XAU/USD';
 }
 
 router.post('/chat', async (req, res) => {
@@ -133,7 +131,6 @@ router.post('/chat', async (req, res) => {
 📝 Reason: ${reason} Current price is ${price.toFixed(2)}.
 `;
 
-      // Save to session
       sessionContext.set(sessionId, tradeSignalSummary);
     } catch (err) {
       console.error(err);
@@ -148,12 +145,14 @@ router.post('/chat', async (req, res) => {
   const prompt = `
 ${languageInstruction}
 
-Here is the most recent trade signal and analysis context you provided to the user earlier:
+You must always use the most recent trade signal and analysis context below to guide your reply.
+
+Most recent trade signal:
 ${tradeSignalSummary || 'No trade signal has been provided yet.'}
 
-The user now says: "${input}"
+User now says: "${input}"
 
-If the user is asking a follow-up question about the previous analysis or anything trading-related, respond flexibly and professionally, referring to the context above. Do not reset the conversation. Always keep your tone motivational and match the language the user used.
+Assume the user's message is related to trading and the signal context above — even if phrased indirectly — and respond professionally and motivationally, referring to the context if it exists. Never reset the conversation. Always match the user's language.
 `;
 
   try {
