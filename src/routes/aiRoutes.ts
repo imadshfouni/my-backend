@@ -42,11 +42,26 @@ async function fetchCandles(symbol: string, interval = '1h', length = 50) {
   }));
 }
 
-// example indicator functions
-function computeTrendStructure(candles: any[]) { const first = candles[0].close, last = candles.at(-1).close; return last > first ? 'Bullish' : last < first ? 'Bearish' : 'Neutral'; }
-function computeEMACross(candles: any[]) { const ema = (len: number, i: number) => candles.slice(i-len+1,i+1).reduce((a,c)=>a+c.close,0)/len; const li=candles.length-1,ema20=ema(20,li),ema50=ema(50,li); return ema20>ema50?'Bullish':ema20<ema50?'Bearish':'Neutral'; }
-function computeRSI(candles: any[], period=14) { const closes=candles.map(c=>c.close), deltas=closes.slice(1).map((c,i)=>c-closes[i]); let g=0,l=0; deltas.slice(-period).forEach(d=>d>0?g+=d:l-=d); const rs=g/(l||1),rsi=100-(100/(1+rs)); return rsi>70?'Overbought':rsi<30?'Oversold':'Neutral'; }
-function computeMACD(candles: any[]) { const closes=candles.map(c=>c.close), ema=(arr,len)=>{const k=2/(len+1);let e=[arr[0]];for(let i=1;i<arr.length;i++)e.push(arr[i]*k+e[i-1]*(1-k));return e},ema12=ema(closes,12),ema26=ema(closes,26),macd=ema12.map((v,i)=>v-ema26[i]),sig=ema(macd,9),m=macd.at(-1),s=sig.at(-1); return m>s?'Bullish':m<s?'Bearish':'Neutral'; }
+function computeTrendStructure(candles: any[]) {
+  const first = candles[0].close, last = candles.at(-1).close;
+  return last > first ? 'Bullish' : last < first ? 'Bearish' : 'Neutral';
+}
+function computeEMACross(candles: any[]) {
+  const ema = (len: number, i: number) => candles.slice(i-len+1,i+1).reduce((a,c)=>a+c.close,0)/len;
+  const li=candles.length-1,ema20=ema(20,li),ema50=ema(50,li);
+  return ema20>ema50?'Bullish':ema20<ema50?'Bearish':'Neutral';
+}
+function computeRSI(candles: any[], period=14) {
+  const closes=candles.map(c=>c.close), deltas=closes.slice(1).map((c,i)=>c-closes[i]);
+  let g=0,l=0; deltas.slice(-period).forEach(d=>d>0?g+=d:l-=d);
+  const rs=g/(l||1),rsi=100-(100/(1+rs));
+  return rsi>70?'Overbought':rsi<30?'Oversold':'Neutral';
+}
+function computeMACD(candles: any[]) {
+  const closes=candles.map(c=>c.close), ema=(arr,len)=>{const k=2/(len+1);let e=[arr[0]];for(let i=1;i<arr.length;i++)e.push(arr[i]*k+e[i-1]*(1-k));return e};
+  const ema12=ema(closes,12),ema26=ema(closes,26),macd=ema12.map((v,i)=>v-ema26[i]),sig=ema(macd,9),m=macd.at(-1),s=sig.at(-1);
+  return m>s?'Bullish':m<s?'Bearish':'Neutral';
+}
 
 router.post('/chat', async (req, res) => {
   const { input } = req.body;
@@ -67,7 +82,6 @@ router.post('/chat', async (req, res) => {
       computeEMACross(candles),
       computeRSI(candles),
       computeMACD(candles),
-      // Add more confirmations if you like
     ];
 
     let bullish = 0, bearish = 0;
@@ -94,11 +108,18 @@ router.post('/chat', async (req, res) => {
 📝 Reason: ${reason} Current price is ${price.toFixed(2)}.
 `;
 
+    const isArabic = /[\u0600-\u06FF]/.test(input);
+    const languageInstruction = isArabic
+      ? 'Please respond fully in Arabic.'
+      : 'Please respond fully in English.';
+
     const prompt = `
+${languageInstruction}
+
 Here is the computed trade signal and reason:
 ${tradeSignal}
 
-Please phrase this professionally, clearly, and motivationally in the same language as the user’s input.
+Please phrase this professionally, clearly, and motivationally.
 `;
 
     const completion = await openai.chat.completions.create({
