@@ -8,6 +8,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { ConfigManager } from './utils/config';
 import { ForexDataService } from './services/ForexDataService';
 import { sessionManager } from './middlewares/sessionManager';
+import fetch from 'node-fetch';
 
 // Initialize services
 const forexService = ForexDataService.getInstance();
@@ -16,6 +17,7 @@ forexService.initialize();
 // Load environment variables
 const PORT = ConfigManager.get('PORT', '3000');
 const UPLOAD_DIR = ConfigManager.get('UPLOAD_DIR', 'uploads');
+const TWELVE_DATA_API_KEY = ConfigManager.get('TWELVE_DATA_API_KEY', '');
 
 // Create Express app
 const app = express();
@@ -48,6 +50,30 @@ app.use(sessionManager); // ✅ use the custom session middleware
 
 // Serve static files from the uploads directory
 app.use(`/${UPLOAD_DIR}`, express.static(UPLOAD_DIR));
+
+// 🪄 Load and refresh supported symbols
+async function loadSupportedSymbols() {
+  try {
+    const res = await fetch(`https://api.twelvedata.com/symbol_search?symbol=&apikey=${TWELVE_DATA_API_KEY}`);
+    const data = await res.json();
+
+    const symbols = new Set<string>();
+
+    if (data.data) {
+      data.data.forEach((item: any) => symbols.add(item.symbol.toUpperCase()));
+      app.locals.supportedSymbols = symbols;
+      console.log(`✅ Loaded ${symbols.size} supported symbols from Twelve Data.`);
+    } else {
+      console.error('Failed to load symbols:', data);
+    }
+  } catch (err) {
+    console.error('Error fetching supported symbols:', err);
+  }
+}
+
+// Initial load and refresh every 6 hours
+loadSupportedSymbols();
+setInterval(loadSupportedSymbols, 6 * 60 * 60 * 1000);
 
 // API routes
 app.use('/api', apiRoutes);
