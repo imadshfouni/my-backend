@@ -48,21 +48,37 @@ function computeTrendStructure(candles: any[]) {
   const first = candles[0].close, last = candles.at(-1).close;
   return last > first ? 'Bullish' : last < first ? 'Bearish' : 'Neutral';
 }
+
 function computeEMACross(candles: any[]) {
   const ema = (len: number, i: number) => candles.slice(i-len+1,i+1).reduce((a,c)=>a+c.close,0)/len;
-  const li=candles.length-1,ema20=ema(20,li),ema50=ema(50,li);
-  return ema20>ema50?'Bullish':ema20<ema50?'Bearish':'Neutral';
+  const li = candles.length - 1;
+  const ema20 = ema(20, li), ema50 = ema(50, li);
+  return ema20 > ema50 ? 'Bullish' : ema20 < ema50 ? 'Bearish' : 'Neutral';
 }
-function computeRSI(candles: any[], period=14) {
-  const closes=candles.map(c=>c.close), deltas=closes.slice(1).map((c,i)=>c-closes[i]);
-  let g=0,l=0; deltas.slice(-period).forEach(d=>d>0?g+=d:l-=d);
-  const rs=g/(l||1),rsi=100-(100/(1+rs));
-  return rsi>70?'Overbought':rsi<30?'Oversold':'Neutral';
+
+function computeRSI(candles: any[], period = 14) {
+  const closes = candles.map(c => c.close), deltas = closes.slice(1).map((c,i) => c - closes[i]);
+  let g = 0, l = 0;
+  deltas.slice(-period).forEach(d => d > 0 ? g += d : l -= d);
+  const rs = g / (l || 1), rsi = 100 - (100 / (1 + rs));
+  return rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral';
 }
+
 function computeMACD(candles: any[]) {
-  const closes=candles.map(c=>c.close), ema=(arr,len)=>{const k=2/(len+1);let e=[arr[0]];for(let i=1;i<arr.length;i++)e.push(arr[i]*k+e[i-1]*(1-k));return e};
-  const ema12=ema(closes,12),ema26=ema(closes,26),macd=ema12.map((v,i)=>v-ema26[i]),sig=ema(macd,9),m=macd.at(-1),s=sig.at(-1);
-  return m>s?'Bullish':m<s?'Bearish':'Neutral';
+  const closes = candles.map(c => c.close);
+  const ema = (arr: number[], len: number) => {
+    const k = 2 / (len + 1);
+    let e = [arr[0]];
+    for (let i = 1; i < arr.length; i++) {
+      e.push(arr[i] * k + e[i-1] * (1 - k));
+    }
+    return e;
+  };
+  const ema12 = ema(closes, 12), ema26 = ema(closes, 26);
+  const macd = ema12.map((v,i) => v - ema26[i]);
+  const sig = ema(macd, 9);
+  const m = macd.at(-1), s = sig.at(-1);
+  return m > s ? 'Bullish' : m < s ? 'Bearish' : 'Neutral';
 }
 
 function detectSymbol(input: string): string {
@@ -120,8 +136,8 @@ router.post('/chat', async (req, res) => {
 
       const reason =
         bullish > bearish
-          ? `Given the bullish trend in ${symbol} and the confluence of bullish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for buying opportunities.`
-          : `Given the bearish trend in ${symbol} and the confluence of bearish indicators such as EMA 20/50 Cross and MACD, it is advisable to look for selling opportunities.`;
+          ? `Given the bullish trend in ${symbol} and the confluence of bullish indicators, it is advisable to look for buying opportunities.`
+          : `Given the bearish trend in ${symbol} and the confluence of bearish indicators, it is advisable to look for selling opportunities.`;
 
       tradeSignalSummary = `
 📈 Direction: ${direction}  
@@ -152,13 +168,17 @@ ${tradeSignalSummary || 'No trade signal has been provided yet.'}
 
 The user now says: "${input}"
 
-The user’s message is always a follow-up or question about the previous analysis, even if it is very short, vague, or indirect. Always answer about the previous trade signal’s timeframe, risk, or reasoning as appropriate. Never reply with a generic greeting or reset the conversation. Always match the language the user used and stay professional and motivational.
+Always assume the user’s message is about trading or related to the most recent analysis — even if it is vague, indirect, conversational, or phrased as a question about markets, instruments, profitability, or preferences. Never reset the conversation while context exists.
+
+If the user’s question is clear and trading-related, answer fully and professionally.
+If the question is clear but unrelated to trading or financial markets, politely and confidently steer the conversation back to trading.
+If the question is vague or unclear, politely ask for clarification while offering a general trading insight in the meantime.
+Always match the user’s language and respond professionally and confidently.
 `;
 
   try {
     const completion = await openai.chat.completions.create({
-model: 'gpt-4o',
-
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
